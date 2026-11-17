@@ -39,7 +39,7 @@ Pior caso: A explicação do por que o pior caso O(n) ocorre é bem simples, o a
 
 Diário de Engenharia de IA:
 Modelo usado: Chat GPT x  
-Prompts: Para criar o visual foram feito 8 prompts  
+Prompts: Para criar o visual foram feito 9 prompt, 1 ajuste que eu tive que fazer foi logo no primeiro prompt em que ele assumiu que eu já sabia usar o github, logo que tive que explicar a situação, outro foi no final que eu pedi para ele revisar usando as regras ditas no documento. 
 
 > 1 - Github: Preciso criar um projeto seguindo a seguinte estrutura:
 trabalho-p2-ed/  
@@ -67,3 +67,8 @@ So vou precisar de ajuda na demo/ para criar uma interface visual para demonstra
 >7 - Proximo app.js
 
 >8 - Como eu inicializo esses teste no navegador?
+
+>9 - Refaça seguindo essas regras:  
+Execução Passo a Passo: Botões de Executar / Play, Próximo Passo (Step), Pausar e Reiniciar (Reset).
+Cenários Pré-configurados: Botões para carregar rapidamente exemplos didáticos (ex.: Caso Médio, Pior Caso, Exemplo Customizado).  
+Painel de Estado e Métricas: Exibição em tempo real do que está acontecendo no passo atual (log explicativo do passo, número de comparações/operações acumuladas e estado das variáveis auxiliares).  
