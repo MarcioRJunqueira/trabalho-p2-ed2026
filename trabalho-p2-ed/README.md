@@ -3,6 +3,7 @@ Aluno: Marcio Ribeiro Junqueira
 RA: 2840482521023  
 Tema: TEMA B - Árvores Binárias de Busca (BST)  
 Link do vídeo: Não terás gravação  
+Linko do HTML: https://marciorjunqueira.github.io/trabalho-p2-ed2026/trabalho-p2-ed/src/demo/
 
 Explicação do algoritmo: A Árvore Binária de Busca (BST) tem um propósito muito simples, serve para guardar dados de forma organizada, realizar buscas, inserir novos dados e remover eles de maneira muito rápida. O algoritmo funciona da seguinte maneira, existe um nó principal no topo da árvore que é chamado de raiz, cada nó pode ter no máximo dois filhos, uma na esquerda e outro na direita. Eles seguem uma regra de ouro para sua organização, para qualquer nó da árvore o da esquerda deve ser menor que o que seu nó pai e o da direita deve ser maior que seu nó pai, não necessáriamente a raiz. Ele tem algumas operações que são: Busca, Inserção e Remoção como principal; Também tem como percurso Em Ordem, Pré-Ordem, Pós-Ordem; Por fim tem o termo height que é a altura da árvore.    
 
