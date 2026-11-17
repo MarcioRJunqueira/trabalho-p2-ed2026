@@ -38,7 +38,7 @@ Utilização no mundo real: Raramente o modelo BST é usado puro, ele é adaptad
 Pior caso: A explicação do por que o pior caso O(n) ocorre é bem simples, o algoritmo segue o caminhho da sua raiz até uma de suas folhas, um caso que pode acontecer é a perda da busca binária, digamos que ao invés de ficar criando dois nós sempre, um na esquerda e um na direita, a gente fique criando apenas um nó numa sequência linear em que cada nó tem um filho sempre maior (ou menor) seguidos, ao invés do algoritmo descartar a ramificação. ela nunca existiu para começo de conversa, então ele vira uma busca linear percorrendo tudo até a ultima folha.  
 
 Diário de Engenharia de IA:
-Modelo usado: Chat GPT x  
+Modelo usado: GPT-6   
 Prompts: Para criar o visual foram feito 9 prompt, 1 ajuste que eu tive que fazer foi logo no primeiro prompt em que ele assumiu que eu já sabia usar o github, logo que tive que explicar a situação, outro foi no final que eu pedi para ele revisar usando as regras ditas no documento. 
 
 > 1 - Github: Preciso criar um projeto seguindo a seguinte estrutura:
