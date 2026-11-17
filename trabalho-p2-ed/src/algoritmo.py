@@ -1,11 +1,5 @@
 # Implementação do algoritmo
 
-
-# ============================================================
-# ÁRVORE DE BUSCA BINÁRIA (BST)
-# ============================================================
-
-
 class Node:
     """
     Representa um nó da Árvore de Busca Binária.
