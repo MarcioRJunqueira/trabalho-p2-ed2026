@@ -54,7 +54,12 @@ ______└── app.js          # Lógica da simulação passo a passo
 Depois eu ja sei oq colocar no algoritmo.py.
 So vou precisar de ajuda na demo/ para criar uma interface visual para demonstrar meu codigo.
 
-
 >Como eu faço a parte da demonstração do meu projeto para fazer a parte visual do meu código
 
->
+>Meu codigo em python: Ele é baseado em Árvore binária de busca. (Junto do algoritmo.py)
+
+>Quero a interface escura, com simulação passo a passo. Vamos começar pelo index.html.
+
+>a
+
+>a
