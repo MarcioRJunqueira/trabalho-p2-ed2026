@@ -1,1 +1,233 @@
 <!-- Interface visual do simulador -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Demonstração interativa de uma Árvore de Busca Binária.">
+    <title>Árvore de Busca Binária | Demonstração</title>
+
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-icon">ABB</span>
+            <div>
+                <h1>Árvore de Busca Binária</h1>
+                <p>Visualização e simulação de operações</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <section class="intro">
+            <h2>Visualizador de Árvore</h2>
+            <p>
+                Insira, pesquise e remova valores. Acompanhe cada etapa
+                do funcionamento da árvore.
+            </p>
+        </section>
+
+        <section class="workspace">
+
+            <!-- Painel de operações -->
+            <aside class="panel operations-panel">
+                <h2>Operações</h2>
+
+                <div class="input-group">
+                    <label for="value-input">Valor inteiro</label>
+                    <input
+                        type="number"
+                        id="value-input"
+                        placeholder="Ex.: 50"
+                        step="1"
+                    >
+                </div>
+
+                <div class="operation-buttons">
+                    <button id="insert-button" class="btn btn-primary">
+                        Inserir
+                    </button>
+
+                    <button id="search-button" class="btn btn-secondary">
+                        Pesquisar
+                    </button>
+
+                    <button id="delete-button" class="btn btn-danger">
+                        Remover
+                    </button>
+                </div>
+
+                <div class="divider"></div>
+
+                <h3>Percursos</h3>
+
+                <div class="traversal-buttons">
+                    <button id="inorder-button" class="btn btn-secondary">
+                        Em ordem
+                    </button>
+
+                    <button id="preorder-button" class="btn btn-secondary">
+                        Pré-ordem
+                    </button>
+
+                    <button id="postorder-button" class="btn btn-secondary">
+                        Pós-ordem
+                    </button>
+                </div>
+
+                <button id="height-button" class="btn btn-secondary btn-full">
+                    Calcular altura
+                </button>
+
+                <button id="reset-button" class="btn btn-outline btn-full">
+                    Reiniciar árvore
+                </button>
+            </aside>
+
+            <!-- Área de visualização -->
+            <section class="panel tree-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Visualização da árvore</h2>
+                        <p>Os nós serão exibidos nesta área.</p>
+                    </div>
+
+                    <span id="tree-status" class="status">
+                        Árvore vazia
+                    </span>
+                </div>
+
+                <div id="tree-container" class="tree-container">
+                    <svg
+                        id="tree-svg"
+                        role="img"
+                        aria-label="Representação gráfica da árvore de busca binária"
+                    >
+                    </svg>
+
+                    <div id="empty-message" class="empty-message">
+                        <span class="empty-icon">◇</span>
+                        <p>Sua árvore está vazia.</p>
+                        <span>Insira um valor para começar.</span>
+                    </div>
+                </div>
+
+                <!-- Legenda -->
+                <div class="legend">
+                    <span>
+                        <i class="legend-dot normal"></i>
+                        Nó
+                    </span>
+
+                    <span>
+                        <i class="legend-dot active"></i>
+                        Nó atual
+                    </span>
+
+                    <span>
+                        <i class="legend-dot found"></i>
+                        Encontrado
+                    </span>
+                </div>
+            </section>
+
+        </section>
+
+        <!-- Simulação passo a passo -->
+        <section class="panel simulation-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Simulação passo a passo</h2>
+                    <p id="step-description">
+                        Execute uma operação para visualizar suas etapas.
+                    </p>
+                </div>
+
+                <span id="step-counter" class="step-counter">
+                    Etapa 0 de 0
+                </span>
+            </div>
+
+            <div class="simulation-controls">
+                <button
+                    id="previous-step-button"
+                    class="btn btn-secondary"
+                    disabled
+                >
+                    ← Anterior
+                </button>
+
+                <button
+                    id="next-step-button"
+                    class="btn btn-primary"
+                    disabled
+                >
+                    Próxima etapa →
+                </button>
+            </div>
+
+            <div class="progress-track">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+        </section>
+
+        <!-- Informações da árvore -->
+        <section class="info-grid">
+
+            <article class="panel info-card">
+                <span class="info-label">Quantidade de nós</span>
+                <strong id="node-count">0</strong>
+            </article>
+
+            <article class="panel info-card">
+                <span class="info-label">Altura da árvore</span>
+                <strong id="tree-height">-1</strong>
+            </article>
+
+            <article class="panel info-card">
+                <span class="info-label">Operações contabilizadas</span>
+                <strong id="operation-count">0</strong>
+            </article>
+
+        </section>
+
+        <!-- Resultado das operações -->
+        <section class="panel result-panel">
+            <h2>Resultado</h2>
+            <p id="result-message" aria-live="polite">
+                Nenhuma operação realizada.
+            </p>
+
+            <div class="traversal-results">
+                <div>
+                    <h3>Em ordem</h3>
+                    <p id="inorder-result">-</p>
+                </div>
+
+                <div>
+                    <h3>Pré-ordem</h3>
+                    <p id="preorder-result">-</p>
+                </div>
+
+                <div>
+                    <h3>Pós-ordem</h3>
+                    <p id="postorder-result">-</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <p>Trabalho P2 — Estrutura de Dados</p>
+        <p>Árvore de Busca Binária (ABB)</p>
+    </footer>
+
+</body>
+</html>
