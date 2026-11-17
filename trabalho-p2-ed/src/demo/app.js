@@ -216,9 +216,7 @@ function showStep(index) {
 
     updateInformation(step.tree, step.count);
 
-    if (simulationResults) {
-        updateTraversalResults(getTraversals(step.tree));
-    }
+    updateTraversalResults(getTraversals(step.tree));
 }
 
 function setOperationButtonsDisabled(disabled) {
@@ -827,7 +825,9 @@ function renderTree(tree, activeValue = null, foundValue = null) {
     treeSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
     treeSvg.setAttribute("width", width);
     treeSvg.setAttribute("height", height);
-
+    treeSvg.style.width = `${width}px`;
+    treeSvg.style.height = `${height}px`;
+   
     const positionMap = new Map();
 
     positions.forEach(position => {
