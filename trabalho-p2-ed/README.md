@@ -60,6 +60,6 @@ So vou precisar de ajuda na demo/ para criar uma interface visual para demonstra
 
 >Quero a interface escura, com simulação passo a passo. Vamos começar pelo index.html.
 
->a
+>Proximo, styles.css
 
->a
+>Proximo app.js
