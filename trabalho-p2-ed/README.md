@@ -39,8 +39,9 @@ Pior caso: A explicação do por que o pior caso O(n) ocorre é bem simples, o a
 
 Diário de Engenharia de IA:
 Modelo usado: Chat GPT x  
-Prompts:  
-> Github: Preciso criar um projeto seguindo a seguinte estrutura:
+Prompts: Para criar o visual foram feito 8 prompts  
+
+> 1 - Github: Preciso criar um projeto seguindo a seguinte estrutura:
 trabalho-p2-ed/  
 __├── README.md               # Documentação teórica, Big-O, Diário de IA e LINK DO VÍDEO  
 __└── src/  
@@ -51,16 +52,18 @@ ______├── styles.css      # Estilização da página e animações
 ______└── app.js          # Lógica da simulação passo a passo  
 
 
->Primeiro eu nunca usei github, preciso de um passo a passo para criar as pastas nesse repositório.  
+>2 - Primeiro eu nunca usei github, preciso de um passo a passo para criar as pastas nesse repositório.  
 Depois eu ja sei oq colocar no algoritmo.py.
 So vou precisar de ajuda na demo/ para criar uma interface visual para demonstrar meu codigo.
 
->Como eu faço a parte da demonstração do meu projeto para fazer a parte visual do meu código
+>3 - Como eu faço a parte da demonstração do meu projeto para fazer a parte visual do meu código
 
->Meu codigo em python: Ele é baseado em Árvore binária de busca. (Junto do algoritmo.py)
+>4 - Meu codigo em python: Ele é baseado em Árvore binária de busca. (Junto do algoritmo.py)
 
->Quero a interface escura, com simulação passo a passo. Vamos começar pelo index.html.
+>5 - Quero a interface escura, com simulação passo a passo. Vamos começar pelo index.html.
 
->Proximo, styles.css
+>6 - Proximo, styles.css
 
->Proximo app.js
+>7 - Proximo app.js
+
+>8 - Como eu inicializo esses teste no navegador?
