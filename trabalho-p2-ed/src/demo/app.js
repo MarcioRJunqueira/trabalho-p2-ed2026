@@ -1,51 +1,16 @@
 
-const elements = {
-    input: document.getElementById("value-input"),
-    treeSvg: document.getElementById("tree-svg"),
-    emptyMessage: document.getElementById("empty-message"),
-    treeStatus: document.getElementById("tree-status"),
-    stepDescription: document.getElementById("step-description"),
-    stepCounter: document.getElementById("step-counter"),
-    stepPercentage: document.getElementById("step-percentage"),
-    progressBar: document.getElementById("progress-bar"),
-    simulationStatus: document.getElementById("simulation-status"),
-    nodeCount: document.getElementById("node-count"),
-    treeHeight: document.getElementById("tree-height"),
-    operationCount: document.getElementById("operation-count"),
-    stateOperation: document.getElementById("state-operation"),
-    stateTarget: document.getElementById("state-target"),
-    stateCurrent: document.getElementById("state-current"),
-    stateComparison: document.getElementById("state-comparison"),
-    variables: document.getElementById("variables-box"),
-    inorder: document.getElementById("inorder-result"),
-    preorder: document.getElementById("preorder-result"),
-    postorder: document.getElementById("postorder-result"),
-    message: document.getElementById("result-message"),
-    scenarioStatus: document.getElementById("scenario-status"),
-    play: document.getElementById("play-button"),
-    next: document.getElementById("next-step-button"),
-    pause: document.getElementById("pause-button"),
-    reset: document.getElementById("reset-button")
-};
+const $ = id => document.getElementById(id);
 
 let root = null;
 let steps = [];
 let currentStep = 0;
 let playbackTimer = null;
-let initialTree = null;
-let initialScenarioName = "Modo personalizado";
-let operationButtons = [];
+let scenarioName = "Exemplo Customizado";
 
-const NODE_RADIUS = 23;
-const LEVEL_HEIGHT = 85;
-const HORIZONTAL_GAP = 76;
+const speed = 900;
 
 function createNode(value) {
-    return {
-        value,
-        left: null,
-        right: null
-    };
+    return { value, left: null, right: null };
 }
 
 function cloneTree(node) {
@@ -63,18 +28,16 @@ function countNodes(node) {
     return 1 + countNodes(node.left) + countNodes(node.right);
 }
 
-// Altura medida em arestas.
-// Árvore vazia = -1; somente a raiz = 0.
-function calculateHeight(node) {
+function height(node) {
     if (!node) return -1;
 
     return 1 + Math.max(
-        calculateHeight(node.left),
-        calculateHeight(node.right)
+        height(node.left),
+        height(node.right)
     );
 }
 
-function getTraversals(node) {
+function traversals(node) {
     const result = {
         inorder: [],
         preorder: [],
@@ -95,67 +58,54 @@ function getTraversals(node) {
     return result;
 }
 
-function formatArray(values) {
+function formatValues(values) {
     return values.length ? values.join(" → ") : "-";
 }
 
 function showMessage(message, type = "") {
-    elements.message.textContent = message;
-    elements.message.className = "message";
+    $("result-message").textContent = message;
+    $("result-message").className = "message";
 
     if (type) {
-        elements.message.classList.add(type);
+        $("result-message").classList.add(type);
     }
 }
 
-function stopPlayback() {
-    if (playbackTimer !== null) {
-        clearInterval(playbackTimer);
-        playbackTimer = null;
+// ------------------------------------------------------------------
+// ÁRVORE E DESENHO
+// ------------------------------------------------------------------
+
+function getPositions(tree) {
+    const positions = [];
+    let index = 0;
+    let maxDepth = 0;
+
+    function visit(node, depth) {
+        if (!node) return;
+
+        maxDepth = Math.max(maxDepth, depth);
+        visit(node.left, depth + 1);
+
+        positions.push({
+            node,
+            x: 55 + index * 76,
+            y: 55 + depth * 85
+        });
+
+        index++;
+        visit(node.right, depth + 1);
     }
 
-    elements.play.disabled = false;
-    elements.pause.disabled = true;
+    visit(tree, 0);
+
+    return {
+        positions,
+        width: Math.max(600, 110 + positions.length * 76),
+        height: Math.max(390, 110 + (maxDepth + 1) * 85)
+    };
 }
 
-function updateInformation(tree, operations) {
-    elements.nodeCount.textContent = countNodes(tree);
-    elements.treeHeight.textContent = calculateHeight(tree);
-    elements.operationCount.textContent = operations;
-    elements.treeStatus.textContent = countNodes(tree) + " nó(s)";
-    updateTraversalResults(tree);
-}
-
-function updateTraversalResults(tree) {
-    const results = getTraversals(tree);
-
-    elements.inorder.textContent = formatArray(results.inorder);
-    elements.preorder.textContent = formatArray(results.preorder);
-    elements.postorder.textContent = formatArray(results.postorder);
-}
-
-function updateState(step) {
-    elements.stateOperation.textContent = step.operation || "Nenhuma";
-    elements.stateTarget.textContent =
-        step.target === null || step.target === undefined ? "-" : step.target;
-
-    elements.stateCurrent.textContent =
-        step.current === null || step.current === undefined ? "-" : step.current;
-
-    elements.stateComparison.textContent = step.comparison || "-";
-
-    elements.variables.textContent = JSON.stringify(
-        step.variables || {},
-        null,
-        2
-    );
-}
-
-// ---------------------------------------------------------------------
-// DESENHO DA ÁRVORE
-// ---------------------------------------------------------------------
-
-function createSvgElement(tag, attributes = {}) {
+function svgElement(tag, attributes) {
     const element = document.createElementNS(
         "http://www.w3.org/2000/svg",
         tag
@@ -168,107 +118,67 @@ function createSvgElement(tag, attributes = {}) {
     return element;
 }
 
-function getTreePositions(tree) {
-    const positions = [];
-    let index = 0;
-    let maxDepth = 0;
-
-    function visit(node, depth) {
-        if (!node) return;
-
-        maxDepth = Math.max(maxDepth, depth);
-
-        visit(node.left, depth + 1);
-
-        positions.push({
-            node,
-            x: 55 + index * HORIZONTAL_GAP,
-            y: 55 + depth * LEVEL_HEIGHT
-        });
-
-        index++;
-
-        visit(node.right, depth + 1);
-    }
-
-    visit(tree, 0);
-
-    return {
-        positions,
-        width: Math.max(600, 110 + positions.length * HORIZONTAL_GAP),
-        height: Math.max(390, 110 + (maxDepth + 1) * LEVEL_HEIGHT)
-    };
-}
-
 function renderTree(tree, activeValue = null, foundValue = null) {
-    elements.treeSvg.innerHTML = "";
+    const svg = $("tree-svg");
+    const emptyMessage = $("empty-message");
+
+    svg.innerHTML = "";
 
     if (!tree) {
-        elements.emptyMessage.style.display = "block";
-        elements.treeSvg.setAttribute("viewBox", "0 0 600 390");
-        elements.treeSvg.style.width = "600px";
-        elements.treeSvg.style.height = "390px";
+        emptyMessage.style.display = "block";
+        svg.setAttribute("viewBox", "0 0 600 390");
+        svg.style.width = "600px";
+        svg.style.height = "390px";
         return;
     }
 
-    elements.emptyMessage.style.display = "none";
+    emptyMessage.style.display = "none";
 
-    const layout = getTreePositions(tree);
-    const positionMap = new Map();
+    const layout = getPositions(tree);
+    const map = new Map();
 
+    layout.positions.forEach(item => map.set(item.node, item));
+
+    svg.setAttribute("viewBox", `0 0 ${layout.width} ${layout.height}`);
+    svg.style.width = `${layout.width}px`;
+    svg.style.height = `${layout.height}px`;
+
+    // Ligações entre os nós.
     layout.positions.forEach(item => {
-        positionMap.set(item.node, item);
-    });
-
-    elements.treeSvg.setAttribute(
-        "viewBox",
-        `0 0 ${layout.width} ${layout.height}`
-    );
-
-    elements.treeSvg.style.width = `${layout.width}px`;
-    elements.treeSvg.style.height = `${layout.height}px`;
-
-    // Desenha as ligações antes dos nós.
-    layout.positions.forEach(item => {
-        const node = item.node;
-
-        [node.left, node.right].forEach(child => {
+        [item.node.left, item.node.right].forEach(child => {
             if (!child) return;
 
-            const childPosition = positionMap.get(child);
+            const childPosition = map.get(child);
 
-            const line = createSvgElement("line", {
+            svg.appendChild(svgElement("line", {
                 x1: item.x,
                 y1: item.y,
                 x2: childPosition.x,
                 y2: childPosition.y,
                 stroke: "#64748b",
                 "stroke-width": 2
-            });
-
-            elements.treeSvg.appendChild(line);
+            }));
         });
     });
 
-    // Desenha os nós.
+    // Nós e seus valores.
     layout.positions.forEach(item => {
         const value = item.node.value;
 
-        let fill = "#2563eb";
+        let color = "#2563eb";
+        if (value === activeValue) color = "#d97706";
+        if (value === foundValue) color = "#16a34a";
 
-        if (value === activeValue) fill = "#d97706";
-        if (value === foundValue) fill = "#16a34a";
-
-        const circle = createSvgElement("circle", {
+        svg.appendChild(svgElement("circle", {
             cx: item.x,
             cy: item.y,
-            r: NODE_RADIUS,
-            fill,
+            r: 23,
+            fill: color,
             stroke: "#bfdbfe",
             "stroke-width": 2
-        });
+        }));
 
-        const text = createSvgElement("text", {
+        const text = svgElement("text", {
             x: item.x,
             y: item.y + 5,
             fill: "#ffffff",
@@ -278,42 +188,51 @@ function renderTree(tree, activeValue = null, foundValue = null) {
         });
 
         text.textContent = value;
-
-        elements.treeSvg.appendChild(circle);
-        elements.treeSvg.appendChild(text);
+        svg.appendChild(text);
     });
 }
 
-// ---------------------------------------------------------------------
-// CONTROLE DA SIMULAÇÃO
-// ---------------------------------------------------------------------
+function updateInformation(tree, operations = 0) {
+    $("node-count").textContent = countNodes(tree);
+    $("tree-height").textContent = height(tree);
+    $("operation-count").textContent = operations;
 
-function addStep(tree, description, details = {}) {
+    $("tree-status").textContent = `${countNodes(tree)} nó(s)`;
+
+    const result = traversals(tree);
+
+    $("inorder-result").textContent = formatValues(result.inorder);
+    $("preorder-result").textContent = formatValues(result.preorder);
+    $("postorder-result").textContent = formatValues(result.postorder);
+}
+
+// ------------------------------------------------------------------
+// ETAPAS DA SIMULAÇÃO
+// ------------------------------------------------------------------
+
+function addStep(tree, description, data = {}) {
     steps.push({
         tree: cloneTree(tree),
         description,
-        operations: details.operations ?? 0,
-        operation: details.operation ?? "Nenhuma",
-        target: details.target ?? null,
-        current: details.current ?? null,
-        comparison: details.comparison ?? "-",
-        variables: details.variables ?? {},
-        activeValue: details.activeValue ?? null,
-        foundValue: details.foundValue ?? null
+        operations: data.operations ?? 0,
+        operation: data.operation ?? "Nenhuma",
+        target: data.target ?? null,
+        current: data.current ?? null,
+        comparison: data.comparison ?? "-",
+        variables: data.variables ?? {},
+        activeValue: data.activeValue ?? null,
+        foundValue: data.foundValue ?? null
     });
 }
 
-function startSimulation(description) {
-    stopPlayback();
-
-    currentStep = 0;
-
-    if (steps.length === 0) {
-        addStep(root, "Nenhuma etapa foi gerada.");
+function stopPlayback() {
+    if (playbackTimer !== null) {
+        clearInterval(playbackTimer);
+        playbackTimer = null;
     }
 
-    elements.simulationStatus.textContent = description;
-    showStep(0);
+    $("play-button").disabled = false;
+    $("pause-button").disabled = true;
 }
 
 function showStep(index) {
@@ -325,38 +244,55 @@ function showStep(index) {
 
     root = cloneTree(step.tree);
 
-    renderTree(
-        root,
-        step.activeValue,
-        step.foundValue
-    );
-
+    renderTree(root, step.activeValue, step.foundValue);
     updateInformation(root, step.operations);
-    updateState(step);
 
-    elements.stepDescription.textContent = step.description;
-
-    elements.stepCounter.textContent =
+    $("step-description").textContent = step.description;
+    $("step-counter").textContent =
         `Passo ${currentStep + 1} de ${steps.length}`;
 
     const percentage = Math.round(
         ((currentStep + 1) / steps.length) * 100
     );
 
-    elements.stepPercentage.textContent = percentage + "%";
-    elements.progressBar.style.width = percentage + "%";
+    $("step-percentage").textContent = `${percentage}%`;
+    $("progress-bar").style.width = `${percentage}%`;
+
+    $("state-operation").textContent = step.operation;
+    $("state-target").textContent = step.target ?? "-";
+    $("state-current").textContent = step.current ?? "-";
+    $("state-comparison").textContent = step.comparison;
+
+    $("variables-box").textContent =
+        JSON.stringify(step.variables, null, 2);
 
     if (currentStep === steps.length - 1) {
-        elements.simulationStatus.textContent = "Simulação concluída";
-        elements.next.disabled = true;
+        $("simulation-status").textContent = "Simulação concluída";
+        $("next-step-button").disabled = true;
         stopPlayback();
     } else {
-        elements.next.disabled = false;
+        $("next-step-button").disabled = false;
+        $("simulation-status").textContent = "Simulação em andamento";
     }
 }
 
+function startSimulation(name) {
+    stopPlayback();
+
+    if (!steps.length) {
+        addStep(root, "Nenhuma etapa foi gerada.");
+    }
+
+    currentStep = 0;
+    $("simulation-status").textContent = name;
+    showStep(0);
+}
+
 function nextStep() {
-    if (!steps.length) return;
+    if (!steps.length) {
+        showMessage("Execute uma operação primeiro.", "error");
+        return;
+    }
 
     if (currentStep < steps.length - 1) {
         showStep(currentStep + 1);
@@ -365,20 +301,20 @@ function nextStep() {
 
 function playSimulation() {
     if (!steps.length) {
-        showMessage("Execute uma operação antes de iniciar a simulação.", "error");
+        showMessage("Execute uma operação antes de iniciar.", "error");
         return;
     }
 
     if (currentStep >= steps.length - 1) {
-        showMessage("A simulação já chegou ao último passo.", "success");
+        showMessage("A simulação já foi concluída.", "success");
         return;
     }
 
     if (playbackTimer !== null) return;
 
-    elements.play.disabled = true;
-    elements.pause.disabled = false;
-    elements.simulationStatus.textContent = "Executando...";
+    $("play-button").disabled = true;
+    $("pause-button").disabled = false;
+    $("simulation-status").textContent = "Executando automaticamente";
 
     playbackTimer = setInterval(() => {
         if (currentStep >= steps.length - 1) {
@@ -386,77 +322,59 @@ function playSimulation() {
             return;
         }
 
-        nextStep();
-    }, 1000);
+        showStep(currentStep + 1);
+    }, speed);
 }
 
 function pauseSimulation() {
+    if (playbackTimer === null) return;
+
     stopPlayback();
-    elements.simulationStatus.textContent = "Simulação pausada";
+    $("simulation-status").textContent = "Simulação pausada";
+    showMessage("Execução pausada. Você pode continuar ou avançar manualmente.");
 }
 
 function resetSimulation() {
     stopPlayback();
 
     if (!steps.length) {
-        root = cloneTree(initialTree);
-        renderTree(root);
-        updateInformation(root, 0);
-        elements.stepDescription.textContent = "Nenhuma simulação disponível.";
-        elements.stepCounter.textContent = "Passo 0 de 0";
-        elements.stepPercentage.textContent = "0%";
-        elements.progressBar.style.width = "0%";
-        elements.variables.textContent = "Aguardando execução...";
-        elements.stateOperation.textContent = "Nenhuma";
-        elements.stateTarget.textContent = "-";
-        elements.stateCurrent.textContent = "-";
-        elements.stateComparison.textContent = "-";
-        elements.simulationStatus.textContent = "Aguardando operação";
-        elements.next.disabled = true;
+        showMessage("Não há uma simulação para reiniciar.", "error");
         return;
     }
 
     showStep(0);
-    elements.simulationStatus.textContent = "Simulação reiniciada";
-    showMessage("Simulação reiniciada desde o primeiro passo.", "success");
+    $("simulation-status").textContent = "Simulação reiniciada";
+    showMessage("Simulação voltou ao primeiro passo.", "success");
 }
 
-// ---------------------------------------------------------------------
-// OPERAÇÃO: INSERIR
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
+// OPERAÇÃO: INSERÇÃO
+// ------------------------------------------------------------------
 
 function insertValue(value) {
+    stopPlayback();
     steps = [];
+
+    const tree = cloneTree(root);
     let operations = 0;
 
-    const workingTree = cloneTree(root);
-
-    addStep(workingTree, `Iniciando a inserção do valor ${value}.`, {
+    addStep(tree, `Iniciando a inserção de ${value}.`, {
         operation: "Inserção",
         target: value,
-        variables: {
-            current: "raiz",
-            value: value,
-            operations: 0
-        }
+        variables: { current: "raiz", value, operations }
     });
 
-    if (!workingTree) {
+    if (!tree) {
         root = createNode(value);
+        operations = 1;
 
-        operations++;
-
-        addStep(root, `Árvore vazia: ${value} foi inserido como raiz.`, {
-            operations,
+        addStep(root, `${value} foi inserido como raiz da árvore.`, {
             operation: "Inserção",
             target: value,
             current: value,
-            comparison: "Não foi necessária comparação.",
-            variables: {
-                current: value,
-                parent: null,
-                operations
-            },
+            operations,
+            comparison: "Árvore vazia: nenhuma comparação necessária",
+            variables: { current: value, parent: null, operations },
             activeValue: value
         });
 
@@ -465,18 +383,18 @@ function insertValue(value) {
         return;
     }
 
-    let current = workingTree;
+    let current = tree;
     let parent = null;
 
     while (current) {
         operations++;
         parent = current;
 
-        addStep(workingTree, `Analisando o nó ${current.value}.`, {
-            operations,
+        addStep(tree, `Analisando o nó ${current.value}.`, {
             operation: "Inserção",
             target: value,
             current: current.value,
+            operations,
             comparison: `${value} ${value < current.value ? "<" : value > current.value ? ">" : "="} ${current.value}`,
             variables: {
                 current: current.value,
@@ -487,62 +405,12 @@ function insertValue(value) {
             activeValue: current.value
         });
 
-        if (value < current.value) {
-            if (!current.left) {
-                current.left = createNode(value);
-
-                addStep(workingTree, `${value} foi inserido à esquerda de ${current.value}.`, {
-                    operations,
-                    operation: "Inserção",
-                    target: value,
-                    current: current.value,
-                    comparison: `${value} < ${current.value}`,
-                    variables: {
-                        current: current.value,
-                        parent: parent.value,
-                        inserted: value,
-                        position: "left",
-                        operations
-                    },
-                    activeValue: value
-                });
-
-                showMessage(`${value} inserido com sucesso.`, "success");
-                break;
-            }
-
-            current = current.left;
-        } else if (value > current.value) {
-            if (!current.right) {
-                current.right = createNode(value);
-
-                addStep(workingTree, `${value} foi inserido à direita de ${current.value}.`, {
-                    operations,
-                    operation: "Inserção",
-                    target: value,
-                    current: current.value,
-                    comparison: `${value} > ${current.value}`,
-                    variables: {
-                        current: current.value,
-                        parent: parent.value,
-                        inserted: value,
-                        position: "right",
-                        operations
-                    },
-                    activeValue: value
-                });
-
-                showMessage(`${value} inserido com sucesso.`, "success");
-                break;
-            }
-
-            current = current.right;
-        } else {
-            addStep(workingTree, `O valor ${value} já existe. Valores duplicados não são inseridos.`, {
-                operations,
+        if (value === current.value) {
+            addStep(tree, `O valor ${value} já existe. Duplicatas não são inseridas.`, {
                 operation: "Inserção",
                 target: value,
                 current: current.value,
+                operations,
                 comparison: `${value} = ${current.value}`,
                 variables: {
                     current: current.value,
@@ -553,42 +421,75 @@ function insertValue(value) {
                 activeValue: current.value
             });
 
+            root = tree;
             showMessage(`${value} já existe na árvore.`, "error");
-            break;
+            startSimulation("Inserção");
+            return;
+        }
+
+        if (value < current.value) {
+            if (!current.left) {
+                current.left = createNode(value);
+                break;
+            }
+            current = current.left;
+        } else {
+            if (!current.right) {
+                current.right = createNode(value);
+                break;
+            }
+            current = current.right;
         }
     }
 
-    root = workingTree;
+    root = tree;
+
+    addStep(root, `${value} foi inserido na posição correta.`, {
+        operation: "Inserção",
+        target: value,
+        current: value,
+        operations,
+        comparison: value < parent.value
+            ? `${value} < ${parent.value}: filho esquerdo`
+            : `${value} > ${parent.value}: filho direito`,
+        variables: {
+            current: value,
+            parent: parent.value,
+            inserted: value,
+            operations
+        },
+        activeValue: value
+    });
+
+    showMessage(`${value} inserido com sucesso.`, "success");
     startSimulation("Inserção");
 }
 
-// ---------------------------------------------------------------------
-// OPERAÇÃO: BUSCAR
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
+// OPERAÇÃO: BUSCA
+// ------------------------------------------------------------------
 
 function searchValue(value) {
+    stopPlayback();
     steps = [];
-    let operations = 0;
-    let current = cloneTree(root);
 
-    addStep(current, `Iniciando a busca pelo valor ${value}.`, {
+    let current = cloneTree(root);
+    let operations = 0;
+
+    addStep(root, `Iniciando a busca por ${value}.`, {
         operation: "Busca",
         target: value,
-        variables: {
-            current: "raiz",
-            target: value,
-            operations: 0
-        }
+        variables: { current: "raiz", target: value, operations }
     });
 
     while (current) {
         operations++;
 
-        addStep(root, `Comparando ${value} com o nó ${current.value}.`, {
-            operations,
+        addStep(root, `Comparando ${value} com ${current.value}.`, {
             operation: "Busca",
             target: value,
             current: current.value,
+            operations,
             comparison: `${value} ${value < current.value ? "<" : value > current.value ? ">" : "="} ${current.value}`,
             variables: {
                 current: current.value,
@@ -599,15 +500,14 @@ function searchValue(value) {
         });
 
         if (value === current.value) {
-            addStep(root, `Valor ${value} encontrado na árvore.`, {
-                operations,
+            addStep(root, `Valor ${value} encontrado!`, {
                 operation: "Busca",
                 target: value,
                 current: current.value,
+                operations,
                 comparison: `${value} = ${current.value}`,
                 variables: {
                     current: current.value,
-                    target: value,
                     found: true,
                     operations
                 },
@@ -623,59 +523,49 @@ function searchValue(value) {
     }
 
     addStep(root, `Valor ${value} não encontrado. A busca chegou a uma referência vazia.`, {
-        operations,
         operation: "Busca",
         target: value,
+        current: null,
+        operations,
         comparison: "current = null",
-        variables: {
-            current: null,
-            target: value,
-            found: false,
-            operations
-        }
+        variables: { current: null, found: false, operations }
     });
 
     showMessage(`Valor ${value} não encontrado.`, "error");
     startSimulation("Busca");
 }
 
-// ---------------------------------------------------------------------
-// OPERAÇÃO: REMOVER
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
+// OPERAÇÃO: REMOÇÃO
+// ------------------------------------------------------------------
 
 function deleteValue(value) {
+    stopPlayback();
     steps = [];
+
+    const tree = cloneTree(root);
     let operations = 0;
+    let parent = null;
+    let current = tree;
 
-    const workingTree = cloneTree(root);
-
-    addStep(workingTree, `Iniciando a remoção do valor ${value}.`, {
+    addStep(tree, `Iniciando a remoção de ${value}.`, {
         operation: "Remoção",
         target: value,
-        variables: {
-            current: "raiz",
-            parent: null,
-            target: value,
-            operations: 0
-        }
+        variables: { current: "raiz", parent: null, operations }
     });
-
-    let parent = null;
-    let current = workingTree;
 
     while (current && current.value !== value) {
         operations++;
 
-        addStep(workingTree, `Procurando ${value}: analisando o nó ${current.value}.`, {
-            operations,
+        addStep(tree, `Procurando ${value}: analisando ${current.value}.`, {
             operation: "Remoção",
             target: value,
             current: current.value,
+            operations,
             comparison: `${value} ${value < current.value ? "<" : ">"} ${current.value}`,
             variables: {
                 current: current.value,
                 parent: parent ? parent.value : null,
-                target: value,
                 operations
             },
             activeValue: current.value
@@ -686,46 +576,39 @@ function deleteValue(value) {
     }
 
     if (!current) {
-        addStep(workingTree, `O valor ${value} não existe. Nada foi removido.`, {
-            operations,
+        addStep(tree, `${value} não foi encontrado. Nenhum nó foi removido.`, {
             operation: "Remoção",
             target: value,
             current: null,
+            operations,
             comparison: "current = null",
-            variables: {
-                current: null,
-                parent: parent ? parent.value : null,
-                target: value,
-                removed: false,
-                operations
-            }
+            variables: { current: null, removed: false, operations }
         });
 
-        root = workingTree;
-        showMessage(`Valor ${value} não encontrado para remoção.`, "error");
+        root = tree;
+        showMessage(`${value} não encontrado para remoção.`, "error");
         startSimulation("Remoção");
         return;
     }
 
     operations++;
 
-    addStep(workingTree, `Valor ${value} encontrado. Verificando seus filhos.`, {
-        operations,
+    addStep(tree, `Nó ${value} encontrado. Verificando seus filhos.`, {
         operation: "Remoção",
         target: value,
-        current: current.value,
-        comparison: "Valor encontrado",
+        current: value,
+        operations,
         variables: {
-            current: current.value,
+            current: value,
             parent: parent ? parent.value : null,
             hasLeft: Boolean(current.left),
             hasRight: Boolean(current.right),
             operations
         },
-        activeValue: current.value
+        activeValue: value
     });
 
-    // Caso 1: nó folha ou nó com apenas um filho.
+    // Caso de zero ou um filho.
     if (!current.left || !current.right) {
         const child = current.left || current.right;
 
@@ -733,18 +616,18 @@ function deleteValue(value) {
             root = child;
         } else if (parent.left === current) {
             parent.left = child;
+            root = tree;
         } else {
             parent.right = child;
+            root = tree;
         }
 
-        const updatedTree = parent ? workingTree : child;
-
-        addStep(updatedTree, `Nó ${value} removido. Ele tinha zero ou um filho.`, {
-            operations,
+        addStep(root, `Nó ${value} removido. Caso de zero ou um filho.`, {
             operation: "Remoção",
             target: value,
             current: child ? child.value : null,
-            comparison: "Remoção por substituição pelo filho",
+            operations,
+            comparison: "Substituição pelo filho, se existir",
             variables: {
                 current: child ? child.value : null,
                 parent: parent ? parent.value : null,
@@ -754,23 +637,21 @@ function deleteValue(value) {
             },
             activeValue: child ? child.value : null
         });
-
-        root = updatedTree;
     } else {
-        // Caso 2: nó com dois filhos.
+        // Caso de dois filhos: menor nó da subárvore direita.
         let successorParent = current;
         let successor = current.right;
 
-        addStep(workingTree, `O nó ${value} possui dois filhos. Procurando seu sucessor em ordem.`, {
-            operations,
+        addStep(tree, "Nó com dois filhos. Procurando o sucessor em ordem.", {
             operation: "Remoção",
             target: value,
             current: successor.value,
-            comparison: "Iniciando pela subárvore direita",
+            operations,
+            comparison: "Início da subárvore direita",
             variables: {
                 current: successor.value,
-                parent: current.value,
                 successor: successor.value,
+                successorParent: successorParent.value,
                 operations
             },
             activeValue: successor.value
@@ -778,16 +659,15 @@ function deleteValue(value) {
 
         while (successor.left) {
             operations++;
-
             successorParent = successor;
             successor = successor.left;
 
-            addStep(workingTree, `Avançando à esquerda para encontrar o sucessor: ${successor.value}.`, {
-                operations,
+            addStep(tree, `Avançando à esquerda: sucessor candidato ${successor.value}.`, {
                 operation: "Remoção",
                 target: value,
                 current: successor.value,
-                comparison: "Procurando o menor valor da subárvore direita",
+                operations,
+                comparison: "Buscando o menor valor da subárvore direita",
                 variables: {
                     current: successor.value,
                     successor: successor.value,
@@ -798,8 +678,8 @@ function deleteValue(value) {
             });
         }
 
-        const oldValue = current.value;
-        current.value = successor.value;
+        const successorValue = successor.value;
+        current.value = successorValue;
 
         if (successorParent === current) {
             successorParent.right = successor.right;
@@ -807,35 +687,37 @@ function deleteValue(value) {
             successorParent.left = successor.right;
         }
 
-        addStep(workingTree, `O valor ${oldValue} foi substituído pelo sucessor ${successor.value}.`, {
-            operations,
+        root = tree;
+
+        addStep(root, `O nó ${value} foi substituído pelo sucessor ${successorValue}.`, {
             operation: "Remoção",
             target: value,
-            current: current.value,
+            current: successorValue,
+            operations,
             comparison: "Substituição pelo sucessor em ordem",
             variables: {
                 current: current.value,
-                successor: successor.value,
+                successor: successorValue,
                 successorParent: successorParent.value,
-                removed: oldValue,
+                removed: value,
                 operations
             },
             activeValue: current.value
         });
-
-        root = workingTree;
     }
 
-    showMessage(`Valor ${value} removido com sucesso.`, "success");
+    showMessage(`${value} removido com sucesso.`, "success");
     startSimulation("Remoção");
 }
 
-// ---------------------------------------------------------------------
-// OPERAÇÕES: TRAVESSIAS
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
+// TRAVESSIAS
+// ------------------------------------------------------------------
 
 function runTraversal(type) {
+    stopPlayback();
     steps = [];
+
     let operations = 0;
     const values = [];
 
@@ -847,44 +729,17 @@ function runTraversal(type) {
 
     addStep(root, `Iniciando a travessia ${names[type]}.`, {
         operation: names[type],
-        variables: {
-            current: "raiz",
-            result: [],
-            operations: 0
-        }
+        variables: { current: "raiz", result: [], operations }
     });
 
-    function visit(node) {
-        if (!node) return;
+    function record(node) {
+        operations++;
+        values.push(node.value);
 
-        if (type === "preorder") {
-            operations++;
-            values.push(node.value);
-            addTraversalStep(node);
-        }
-
-        visit(node.left);
-
-        if (type === "inorder") {
-            operations++;
-            values.push(node.value);
-            addTraversalStep(node);
-        }
-
-        visit(node.right);
-
-        if (type === "postorder") {
-            operations++;
-            values.push(node.value);
-            addTraversalStep(node);
-        }
-    }
-
-    function addTraversalStep(node) {
-        addStep(root, `Visitando o nó ${node.value}. Resultado parcial: ${formatArray(values)}.`, {
-            operations,
+        addStep(root, `Visitando ${node.value}. Resultado parcial: ${formatValues(values)}.`, {
             operation: names[type],
             current: node.value,
+            operations,
             comparison: "Nó visitado",
             variables: {
                 current: node.value,
@@ -895,11 +750,25 @@ function runTraversal(type) {
         });
     }
 
+    function visit(node) {
+        if (!node) return;
+
+        if (type === "preorder") record(node);
+
+        visit(node.left);
+
+        if (type === "inorder") record(node);
+
+        visit(node.right);
+
+        if (type === "postorder") record(node);
+    }
+
     visit(root);
 
-    addStep(root, `Travessia concluída. Resultado: ${formatArray(values)}.`, {
-        operations,
+    addStep(root, `Travessia concluída: ${formatValues(values)}.`, {
         operation: names[type],
+        operations,
         comparison: "Fim da travessia",
         variables: {
             current: null,
@@ -908,38 +777,35 @@ function runTraversal(type) {
         }
     });
 
-    showMessage(`${names[type]}: ${formatArray(values)}`, "success");
+    showMessage(`${names[type]}: ${formatValues(values)}`, "success");
     startSimulation(names[type]);
 }
 
-// ---------------------------------------------------------------------
-// OPERAÇÃO: ALTURA
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
+// CÁLCULO DA ALTURA
+// ------------------------------------------------------------------
 
 function calculateHeightStepByStep() {
+    stopPlayback();
     steps = [];
+
     let operations = 0;
 
-    addStep(root, "Iniciando o cálculo da altura da árvore.", {
+    addStep(root, "Iniciando o cálculo da altura.", {
         operation: "Altura",
-        variables: {
-            current: "raiz",
-            operations: 0
-        }
+        variables: { current: "raiz", operations }
     });
 
     function calculate(node) {
-        if (!node) {
-            return -1;
-        }
+        if (!node) return -1;
 
         operations++;
 
-        addStep(root, `Visitando o nó ${node.value} para calcular sua altura.`, {
-            operations,
+        addStep(root, `Visitando o nó ${node.value}.`, {
             operation: "Altura",
             current: node.value,
-            comparison: "Calculando alturas das subárvores",
+            operations,
+            comparison: "Calculando altura das subárvores",
             variables: {
                 current: node.value,
                 operations
@@ -951,10 +817,10 @@ function calculateHeightStepByStep() {
         const rightHeight = calculate(node.right);
         const result = 1 + Math.max(leftHeight, rightHeight);
 
-        addStep(root, `Altura calculada para o nó ${node.value}: ${result}.`, {
-            operations,
+        addStep(root, `Altura calculada para ${node.value}: ${result}.`, {
             operation: "Altura",
             current: node.value,
+            operations,
             comparison: `1 + max(${leftHeight}, ${rightHeight}) = ${result}`,
             variables: {
                 current: node.value,
@@ -969,26 +835,26 @@ function calculateHeightStepByStep() {
         return result;
     }
 
-    const height = calculate(root);
+    const result = calculate(root);
 
-    addStep(root, `Cálculo concluído. Altura da árvore: ${height}.`, {
-        operations,
+    addStep(root, `Altura final da árvore: ${result}.`, {
         operation: "Altura",
-        comparison: `Altura final = ${height}`,
+        operations,
+        comparison: `Altura = ${result}`,
         variables: {
             current: null,
-            calculatedHeight: height,
+            calculatedHeight: result,
             operations
         }
     });
 
-    showMessage(`Altura da árvore: ${height}.`, "success");
+    showMessage(`Altura da árvore: ${result}.`, "success");
     startSimulation("Cálculo da altura");
 }
 
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
 // CENÁRIOS PRÉ-CONFIGURADOS
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
 
 function loadScenario(values, name) {
     stopPlayback();
@@ -996,12 +862,11 @@ function loadScenario(values, name) {
     root = null;
     steps = [];
     currentStep = 0;
+    scenarioName = name;
 
     for (const value of values) {
-        const newNode = createNode(value);
-
         if (!root) {
-            root = newNode;
+            root = createNode(value);
             continue;
         }
 
@@ -1010,17 +875,15 @@ function loadScenario(values, name) {
         while (true) {
             if (value < current.value) {
                 if (!current.left) {
-                    current.left = newNode;
+                    current.left = createNode(value);
                     break;
                 }
-
                 current = current.left;
             } else if (value > current.value) {
                 if (!current.right) {
-                    current.right = newNode;
+                    current.right = createNode(value);
                     break;
                 }
-
                 current = current.right;
             } else {
                 break;
@@ -1028,30 +891,14 @@ function loadScenario(values, name) {
         }
     }
 
-    initialTree = cloneTree(root);
-    initialScenarioName = name;
-
     renderTree(root);
     updateInformation(root, 0);
+    resetDisplay();
 
-    elements.scenarioStatus.textContent = `Cenário carregado: ${name}`;
-    elements.simulationStatus.textContent = "Cenário carregado";
-    elements.stepDescription.textContent =
-        "Cenário pronto. Escolha uma operação para acompanhar sua execução.";
+    $("scenario-status").textContent = `Cenário carregado: ${name}`;
+    $("simulation-status").textContent = "Cenário pronto";
 
-    elements.stepCounter.textContent = "Passo 0 de 0";
-    elements.stepPercentage.textContent = "0%";
-    elements.progressBar.style.width = "0%";
-
-    elements.variables.textContent = "Aguardando execução...";
-    elements.stateOperation.textContent = "Nenhuma";
-    elements.stateTarget.textContent = "-";
-    elements.stateCurrent.textContent = "-";
-    elements.stateComparison.textContent = "-";
-
-    elements.next.disabled = true;
-
-    showMessage(`${name} carregado com sucesso.`, "success");
+    showMessage(`${name} carregado. Escolha uma operação para simular.`, "success");
 }
 
 function loadMediumCase() {
@@ -1068,142 +915,135 @@ function loadWorstCase() {
     );
 }
 
-function loadEdgeCase() {
-    loadScenario(
-        [],
-        "Caso de Borda"
-    );
+function loadCustomCase() {
+    loadScenario([], "Exemplo Customizado");
+    $("scenario-status").textContent =
+        "Exemplo Customizado: insira os valores que desejar.";
+    showMessage("Modo personalizado ativado. Monte sua própria árvore.");
 }
 
-// ---------------------------------------------------------------------
-// LIMPAR ÁRVORE E ENTRADA
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
+// RESET VISUAL E LIMPEZA
+// ------------------------------------------------------------------
+
+function resetDisplay() {
+    $("step-description").textContent =
+        "Escolha uma operação para acompanhar sua execução.";
+
+    $("step-counter").textContent = "Passo 0 de 0";
+    $("step-percentage").textContent = "0%";
+    $("progress-bar").style.width = "0%";
+
+    $("state-operation").textContent = "Nenhuma";
+    $("state-target").textContent = "-";
+    $("state-current").textContent = "-";
+    $("state-comparison").textContent = "-";
+
+    $("variables-box").textContent = "Aguardando execução...";
+    $("next-step-button").disabled = true;
+
+    $("simulation-status").textContent = "Aguardando operação";
+}
 
 function clearTree() {
     stopPlayback();
 
     root = null;
-    initialTree = null;
     steps = [];
     currentStep = 0;
-    initialScenarioName = "Modo personalizado";
-
-    elements.scenarioStatus.textContent =
-        "Modo personalizado: monte sua própria árvore.";
-
-    elements.simulationStatus.textContent = "Árvore limpa";
-    elements.stepDescription.textContent =
-        "Insira valores ou carregue um cenário.";
-
-    elements.stepCounter.textContent = "Passo 0 de 0";
-    elements.stepPercentage.textContent = "0%";
-    elements.progressBar.style.width = "0%";
-
-    elements.variables.textContent = "Aguardando execução...";
-    elements.stateOperation.textContent = "Nenhuma";
-    elements.stateTarget.textContent = "-";
-    elements.stateCurrent.textContent = "-";
-    elements.stateComparison.textContent = "-";
-    elements.next.disabled = true;
+    scenarioName = "Exemplo Customizado";
 
     renderTree(root);
     updateInformation(root, 0);
+    resetDisplay();
 
-    showMessage("Árvore limpa. Modo personalizado ativado.");
+    $("scenario-status").textContent =
+        "Exemplo Customizado: insira os valores que desejar.";
+
+    showMessage("Árvore limpa. Você pode montar uma nova árvore.");
 }
 
-// ---------------------------------------------------------------------
-// EVENTOS DOS BOTÕES
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
+// ENTRADA E EVENTOS
+// ------------------------------------------------------------------
 
-function getIntegerInput() {
-    const value = elements.input.value.trim();
+function getInputValue() {
+    const raw = $("value-input").value.trim();
 
-    if (value === "") {
+    if (raw === "") {
         showMessage("Digite um valor inteiro.", "error");
-        elements.input.focus();
+        $("value-input").focus();
         return null;
     }
 
-    const number = Number(value);
+    const value = Number(raw);
 
-    if (!Number.isSafeInteger(number)) {
-        showMessage("Digite um número inteiro válido.", "error");
-        elements.input.focus();
+    if (!Number.isSafeInteger(value)) {
+        showMessage("Informe um número inteiro válido.", "error");
+        $("value-input").focus();
         return null;
     }
 
-    return number;
+    return value;
 }
 
-document.getElementById("insert-button").addEventListener("click", () => {
-    const value = getIntegerInput();
+$("insert-button").addEventListener("click", () => {
+    const value = getInputValue();
     if (value !== null) insertValue(value);
 });
 
-document.getElementById("search-button").addEventListener("click", () => {
-    const value = getIntegerInput();
+$("search-button").addEventListener("click", () => {
+    const value = getInputValue();
     if (value !== null) searchValue(value);
 });
 
-document.getElementById("delete-button").addEventListener("click", () => {
-    const value = getIntegerInput();
+$("delete-button").addEventListener("click", () => {
+    const value = getInputValue();
     if (value !== null) deleteValue(value);
 });
 
-document.getElementById("inorder-button").addEventListener("click", () => {
-    runTraversal("inorder");
-});
+$("inorder-button").addEventListener("click", () => runTraversal("inorder"));
+$("preorder-button").addEventListener("click", () => runTraversal("preorder"));
+$("postorder-button").addEventListener("click", () => runTraversal("postorder"));
 
-document.getElementById("preorder-button").addEventListener("click", () => {
-    runTraversal("preorder");
-});
+$("height-button").addEventListener("click", calculateHeightStepByStep);
+$("clear-button").addEventListener("click", clearTree);
 
-document.getElementById("postorder-button").addEventListener("click", () => {
-    runTraversal("postorder");
-});
+$("medium-button").addEventListener("click", loadMediumCase);
+$("worst-button").addEventListener("click", loadWorstCase);
+$("custom-button").addEventListener("click", loadCustomCase);
 
-document.getElementById("height-button").addEventListener("click", () => {
-    calculateHeightStepByStep();
-});
+$("play-button").addEventListener("click", playSimulation);
+$("next-step-button").addEventListener("click", nextStep);
+$("pause-button").addEventListener("click", pauseSimulation);
+$("reset-button").addEventListener("click", resetSimulation);
 
-document.getElementById("clear-button").addEventListener("click", clearTree);
-
-document.getElementById("medium-button").addEventListener("click", loadMediumCase);
-document.getElementById("worst-button").addEventListener("click", loadWorstCase);
-document.getElementById("edge-button").addEventListener("click", loadEdgeCase);
-
-elements.play.addEventListener("click", playSimulation);
-elements.next.addEventListener("click", nextStep);
-elements.pause.addEventListener("click", pauseSimulation);
-elements.reset.addEventListener("click", resetSimulation);
-
-elements.input.addEventListener("keydown", event => {
+$("value-input").addEventListener("keydown", event => {
     if (event.key === "Enter") {
-        const value = getIntegerInput();
+        const value = getInputValue();
         if (value !== null) insertValue(value);
     }
 });
 
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
 // INICIALIZAÇÃO
-// ---------------------------------------------------------------------
+// ------------------------------------------------------------------
 
 function initialize() {
     root = null;
-    initialTree = null;
+    steps = [];
+    currentStep = 0;
 
     renderTree(root);
     updateInformation(root, 0);
+    resetDisplay();
 
-    elements.next.disabled = true;
-    elements.pause.disabled = true;
+    $("pause-button").disabled = true;
 
-    elements.variables.textContent = "Aguardando execução...";
-    elements.scenarioStatus.textContent =
-        "Modo personalizado: monte sua própria árvore.";
+    $("scenario-status").textContent =
+        "Selecione um cenário ou monte sua própria árvore.";
 
-    showMessage("Simulador iniciado. Escolha um cenário ou insira valores.");
+    showMessage("Simulador iniciado. Escolha um dos três cenários.");
 }
 
 initialize();
