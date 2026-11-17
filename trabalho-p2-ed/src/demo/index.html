@@ -12,49 +12,54 @@
     <header class="header">
         <div>
             <h1>Árvore de Busca Binária</h1>
-            <p>Visualização e simulação passo a passo de uma ABB</p>
+            <p>Visualização e execução passo a passo de uma ABB</p>
         </div>
         <span class="header-tag">Estrutura de Dados</span>
     </header>
 
     <main class="container">
+
         <section class="panel">
             <div class="section-heading">
-                <h2>Cenários pré-configurados</h2>
-                <span class="muted">Carregue um exemplo para começar</span>
+                <h2>Cenários de demonstração</h2>
+                <span class="muted">Escolha um exemplo para iniciar</span>
             </div>
 
             <div class="scenario-grid">
                 <button class="scenario-button" id="medium-button">
                     <strong>Caso Médio</strong>
-                    <span>Árvore equilibrada com 7 nós</span>
+                    <span>Árvore equilibrada</span>
                     <small>50, 30, 70, 20, 40, 60, 80</small>
                 </button>
 
                 <button class="scenario-button" id="worst-button">
                     <strong>Pior Caso</strong>
-                    <span>Árvore degenerada com 7 nós</span>
+                    <span>Árvore degenerada</span>
                     <small>10, 20, 30, 40, 50, 60, 70</small>
                 </button>
 
-                <button class="scenario-button" id="edge-button">
-                    <strong>Caso de Borda</strong>
-                    <span>Árvore vazia, sem elementos</span>
-                    <small>Testes de busca, remoção e altura</small>
+                <button class="scenario-button" id="custom-button">
+                    <strong>Exemplo Customizado</strong>
+                    <span>Monte sua própria árvore</span>
+                    <small>Insira, busque e remova valores livremente</small>
                 </button>
             </div>
-            <p class="scenario-status" id="scenario-status">Modo personalizado: monte sua própria árvore.</p>
+
+            <p class="scenario-status" id="scenario-status">
+                Selecione um cenário ou monte sua própria árvore.
+            </p>
         </section>
 
         <section class="panel">
             <div class="section-heading">
                 <h2>Operações da árvore</h2>
-                <span class="muted">Modo personalizado</span>
+                <span class="muted">Inserção, busca e remoção</span>
             </div>
 
             <div class="operation-form">
                 <label for="value-input">Valor inteiro</label>
-                <input type="number" id="value-input" placeholder="Ex.: 50" step="1">
+                <input type="number" id="value-input" step="1"
+                       placeholder="Ex.: 50">
 
                 <div class="operation-buttons">
                     <button class="button primary" id="insert-button">Inserir</button>
@@ -86,7 +91,9 @@
 
             <div class="tree-container" id="tree-container">
                 <svg id="tree-svg" xmlns="http://www.w3.org/2000/svg"></svg>
-                <p id="empty-message">A árvore está vazia. Insira um valor ou carregue um cenário.</p>
+                <p id="empty-message">
+                    A árvore está vazia. Insira um valor ou carregue um cenário.
+                </p>
             </div>
         </section>
 
@@ -100,7 +107,7 @@
                 <button class="button primary" id="play-button">▶ Executar</button>
                 <button class="button" id="next-step-button">Próximo passo</button>
                 <button class="button" id="pause-button" disabled>Ⅱ Pausar</button>
-                <button class="button danger-outline" id="reset-button">↺ Reiniciar simulação</button>
+                <button class="button danger-outline" id="reset-button">↺ Reiniciar</button>
             </div>
 
             <div class="step-information">
@@ -108,10 +115,14 @@
                     <strong id="step-counter">Passo 0 de 0</strong>
                     <span id="step-percentage">0%</span>
                 </div>
+
                 <div class="progress-track">
                     <div class="progress-bar" id="progress-bar"></div>
                 </div>
-                <p id="step-description">Escolha uma operação ou carregue um cenário.</p>
+
+                <p id="step-description">
+                    Escolha uma operação para acompanhar sua execução.
+                </p>
             </div>
         </section>
 
@@ -120,19 +131,21 @@
                 <span>Nós na árvore</span>
                 <strong id="node-count">0</strong>
             </article>
+
             <article class="metric-card">
                 <span>Altura</span>
                 <strong id="tree-height">-1</strong>
             </article>
+
             <article class="metric-card">
-                <span>Operações acumuladas</span>
+                <span>Comparações / operações</span>
                 <strong id="operation-count">0</strong>
             </article>
         </section>
 
         <section class="panel">
             <div class="section-heading">
-                <h2>Estado da execução</h2>
+                <h2>Painel de estado</h2>
                 <span class="muted">Informações do passo atual</span>
             </div>
 
@@ -141,14 +154,17 @@
                     <span>Operação</span>
                     <strong id="state-operation">Nenhuma</strong>
                 </div>
+
                 <div class="state-item">
                     <span>Valor de referência</span>
                     <strong id="state-target">-</strong>
                 </div>
+
                 <div class="state-item">
                     <span>Nó atual</span>
                     <strong id="state-current">-</strong>
                 </div>
+
                 <div class="state-item">
                     <span>Comparação</span>
                     <strong id="state-comparison">-</strong>
@@ -169,10 +185,12 @@
                     <h3>Em ordem</h3>
                     <p id="inorder-result">-</p>
                 </div>
+
                 <div class="traversal-card">
                     <h3>Pré-ordem</h3>
                     <p id="preorder-result">-</p>
                 </div>
+
                 <div class="traversal-card">
                     <h3>Pós-ordem</h3>
                     <p id="postorder-result">-</p>
@@ -181,7 +199,7 @@
         </section>
 
         <div class="message" id="result-message" role="status">
-            Pronto para iniciar.
+            Simulador pronto.
         </div>
     </main>
 
