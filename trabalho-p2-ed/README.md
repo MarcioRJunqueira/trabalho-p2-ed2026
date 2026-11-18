@@ -1,6 +1,7 @@
 # Trabalho P2 - Estrutura de Dados
 Aluno: Marcio Ribeiro Junqueira  
 RA: 2840482521023  
+Curso: Analise de desenvolvimento de sistemas, 3 ciclo  
 Tema: TEMA B - Árvores Binárias de Busca (BST)  
 Link do vídeo: Não terás gravação  
 Link do HTML: https://marciorjunqueira.github.io/trabalho-p2-ed2026/trabalho-p2-ed/src/demo/
